@@ -1,0 +1,8 @@
+go:
+  data:
+    kafka:
+      servers: "59.56.77.23:9092"   #集群多个服务器之间用逗号分隔
+      ack: all  #ack模式 no,local,all
+      auto_commit: true  #是否自动提交
+      partitioner: hash   #分区选择模式 hash,random,round-robin
+      version: 2.8.1  #kafka版本
