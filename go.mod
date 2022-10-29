@@ -1,4 +1,4 @@
-module mgkafka
+module github.com/maczh/mgkafka
 
 go 1.17
 
