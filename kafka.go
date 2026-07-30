@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Shopify/sarama"
+	"strings"
+
+	"github.com/IBM/sarama"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
-	"github.com/levigross/grequests"
 	"github.com/sadlil/gologger"
-	"strings"
 )
 
 type kafka struct {
-	confUrl string
-	conf    *koanf.Koanf
-	client  sarama.Client
-	topics  []string
-	servers []string
-	config  *sarama.Config
+	configData []byte
+	conf       *koanf.Koanf
+	client     sarama.Client
+	topics     []string
+	servers    []string
+	config     *sarama.Config
 }
 
 var Kafka = &kafka{}
@@ -53,23 +53,17 @@ func (k *kafka) getConfig() *sarama.Config {
 	return config
 }
 
-func (k *kafka) Init(kafkaConfigUrl string) {
-	if kafkaConfigUrl != "" {
-		k.confUrl = kafkaConfigUrl
+func (k *kafka) Init(kafkaConfigData []byte) {
+	if kafkaConfigData != nil {
+		k.configData = kafkaConfigData
 	}
-	if k.confUrl == "" {
-		logger.Error("Kafka配置Url为空")
+	if k.configData == nil {
+		logger.Error("Kafka配置数据为空")
 		return
 	}
 	if k.conf == nil {
-		logger.Debug("正在获取kafka配置: " + k.confUrl)
-		resp, err := grequests.Get(k.confUrl, nil)
-		if err != nil {
-			logger.Error("kafka配置下载失败! " + err.Error())
-			return
-		}
 		k.conf = koanf.New(".")
-		err = k.conf.Load(rawbytes.Provider([]byte(resp.String())), yaml.Parser())
+		err := k.conf.Load(rawbytes.Provider(k.configData), yaml.Parser())
 		if err != nil {
 			logger.Error("Kafka配置文件解析错误:" + err.Error())
 			k.conf = nil
@@ -89,9 +83,9 @@ func (k *kafka) Init(kafkaConfigUrl string) {
 		logger.Error("Kafka获取topic清单失败: " + err.Error())
 		k.topics = make([]string, 0)
 	}
-	if strings.Contains(client.Brokers()[0].Addr(), "127.0.0.1") {
-		logger.Error("Kafka服务器配置错误，请修改服务端侦听地址")
-	}
+	// if strings.Contains(client.Brokers()[0].Addr(), "127.0.0.1") {
+	// 	logger.Error("Kafka服务器配置错误，请修改服务端侦听地址")
+	// }
 	logger.Info("Kafka建立连接成功")
 }
 
@@ -107,7 +101,7 @@ func (k *kafka) Close() {
 func (k *kafka) Check() error {
 	if k.client.Closed() {
 		logger.Error("Kafka client has closed")
-		k.Init("")
+		k.Init(k.configData)
 		if k.client.Closed() {
 			return fmt.Errorf("Kafka client closed")
 		}

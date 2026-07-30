@@ -10,7 +10,7 @@ go get -u github.com/maczh/mgkafka
 
 ```go
 	//加载Kafka消息队列
-    mgin.MGin.Use("kafka",mgkafka.Kafka.Init,mgkafka.Kafka.Close,mgkafka.Kafka.Check)
+    mgin.MGin.UsePlugin("kafka",mgkafka.Kafka)
 ```
 
 ## yml配置
