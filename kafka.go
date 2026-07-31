@@ -218,7 +218,7 @@ func (k *kafka) MessageListener(groupId, topic string, listener func(topic, msg 
 }
 
 type MsgHandler struct {
-	Handle func(topic,msg string) error
+	Handle func(topic, msg string) error
 }
 
 func (MsgHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
@@ -226,7 +226,7 @@ func (MsgHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 func (h MsgHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		//logger.Debug(fmt.Sprintf("Message topic:%q partition:%d offset:%d, msg: %s\n", msg.Topic, msg.Partition, msg.Offset, string(msg.Value)))
-		err := h.Handle(string(msg.Value))
+		err := h.Handle(msg.Topic, string(msg.Value))
 		if err != nil {
 			logger.Error("Kafka消息消费处理错误: " + err.Error())
 		}
