@@ -191,7 +191,7 @@ func (k *kafka) SendMsgs(topic string, data []string) error {
 	return nil
 }
 
-func (k *kafka) MessageListener(groupId, topic string, listener func(msg string) error) error {
+func (k *kafka) MessageListener(groupId, topic string, listener func(topic, msg string) error) error {
 	if !stringArrayContains(k.topics, topic) {
 		err := k.CreateTopic(topic)
 		if err != nil {
@@ -218,7 +218,7 @@ func (k *kafka) MessageListener(groupId, topic string, listener func(msg string)
 }
 
 type MsgHandler struct {
-	Handle func(msg string) error
+	Handle func(topic,msg string) error
 }
 
 func (MsgHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
