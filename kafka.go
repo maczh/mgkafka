@@ -201,6 +201,7 @@ func (k *kafka) MessageListener(groupId, topic string, listener func(topic, msg 
 		k.topics = append(k.topics, topic)
 	}
 	handler := MsgHandler{
+		ready:  make(chan bool),
 		Handle: listener,
 	}
 	consumerGroup, err := k.GetConsumerGroup(groupId)
@@ -218,19 +219,33 @@ func (k *kafka) MessageListener(groupId, topic string, listener func(topic, msg 
 }
 
 type MsgHandler struct {
+	ready  chan bool
 	Handle func(topic, msg string) error
 }
 
-func (MsgHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
+func (h MsgHandler) Setup(_ sarama.ConsumerGroupSession) error {
+	close(h.ready)
+	return nil
+}
 func (MsgHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
-func (h MsgHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
-		//logger.Debug(fmt.Sprintf("Message topic:%q partition:%d offset:%d, msg: %s\n", msg.Topic, msg.Partition, msg.Offset, string(msg.Value)))
-		err := h.Handle(msg.Topic, string(msg.Value))
-		if err != nil {
-			logger.Error("Kafka消息消费处理错误: " + err.Error())
+func (h MsgHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	for {
+		select {
+		case message, ok := <-claim.Messages():
+			if !ok {
+				logger.Error("Kafka message channel was closed.")
+				return nil
+			}
+			logger.Debug(fmt.Sprintf("Message topic:%q partition:%d offset:%d, msg: %s\n", message.Topic, message.Partition, message.Offset, string(message.Value)))
+			err := h.Handle(message.Topic, string(message.Value))
+			if err != nil {
+				logger.Error("Kafka消息消费处理错误: " + err.Error())
+			}
+			session.MarkMessage(message, "")
+			session.Commit()
+		case <-session.Context().Done():
+			return nil
 		}
-		sess.MarkMessage(msg, "")
 	}
 	return nil
 }
