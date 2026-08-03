@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+<<<<<<< HEAD
 func TestSubscribe(t *testing.T) {
 	cfg := `go:
   data:
@@ -27,5 +28,30 @@ func TestSubscribe(t *testing.T) {
 
 func consumerListener(topic, msg string) error {
 	fmt.Printf("接收到%s的消息：%s\n", topic, msg)
+=======
+var kafkaConfig = []byte(`go:
+  data:
+    kafka:
+      servers: "127.0.0.1:9092"
+      ack: all
+      auto_commit: true
+      partitioner: hash
+      version: 3.7.1`)
+
+func TestKafka(t *testing.T) {
+	Kafka.Init(kafkaConfig)
+	defer Kafka.Close()
+	Kafka.MessageListener("testGroup", "biz.test", consumer)
+	time.Sleep(5 * time.Second)
+	for i := 0; i < 10; i++ {
+		Kafka.Send("biz.test", fmt.Sprintf("测试：test msg %d", i))
+		time.Sleep(time.Second)
+	}
+	time.Sleep(3 * time.Second)
+}
+
+func consumer(topic, msg string) error {
+	logger.Info(fmt.Sprintf("接收到Kafka主题%s的消息:%s", topic, msg))
+>>>>>>> df1f1f28eeb224e41c9b9373a482eadcc4ee0337
 	return nil
 }

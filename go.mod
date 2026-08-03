@@ -5,7 +5,6 @@ go 1.25.7
 require (
 	github.com/IBM/sarama v1.60.1
 	github.com/knadh/koanf v1.4.4
-	github.com/levigross/grequests v0.0.0-20190908174114-253788527a1a
 	github.com/sadlil/gologger v0.0.0-20180131031757-2507bf651df8
 )
 
@@ -15,7 +14,6 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
